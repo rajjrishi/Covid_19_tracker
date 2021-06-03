@@ -7,17 +7,21 @@ import Table from './Table';
 import Covidchart from './Covidchart';
 import 'leaflet/dist/leaflet.css';
 import Map from './Map';
+import { sortData, prettyPrintStat } from "./util";
+import numeral from "numeral";
 
 function App() {
   const [countries,setCountries]=useState([]);
   const [selectedCountry,setSelectedCountry]=useState('Worldwide');
   const [countryInfo,setCountryInfo]=useState({});
   const [tabledata,setTabledata]=useState([]);
-  //const [mapCenter,setMapcenter]=useState({ 34.80746,-40.4796});
-  //const [mapzoom,setMapzoom]=useState(3);
+  const [mapCountries, setMapCountries] = useState([]);
+  const [casesType, setCasesType] = useState("cases");
+  const [mapCenter, setMapCenter] = useState({ lat: 34.80746, lng: -40.4796 });
+  const [mapZoom, setMapZoom] = useState(3);
 
   useEffect(() => {
-    const url = "https://disease.sh/v3/covid-19/all";
+    const url = "https://disease.sh/v3/covid-19/all"; 
     fetch(url)
     .then((response) => (response).json())
     .then(data => setCountryInfo(data) )
@@ -36,6 +40,7 @@ function App() {
           const sorted = data.sort((x,y) => y.cases - x.cases);
           setCountries(countries);
           setTabledata(sorted);
+          setMapCountries(data);
       });
     };
 
@@ -55,40 +60,74 @@ function App() {
     .then(data => {
       setSelectedCountry(countrycode);
       setCountryInfo(data);
+      setMapCenter([data.lat, data.long]);
+      setMapZoom(4);
     } )
   };
 
   
    return (
+     <>
      <div className="app">
      <div className="app_left">
        <div className="app_header">
          <h1>COVID 19 TRACKER</h1>
          <FormControl className="app_dropdown">
-           <Select variant="outlined" onChange={onCountrychange} value={selectedCountry}>
-           <MenuItem value='Worldwide'>Worldwide</MenuItem>
+           <Select variant="outlined" onChange={onCountrychange} value={selectedCountry} className="app_selection">
+           <MenuItem value='Worldwide' ><div className="app_drop_menu">Worldwide</div></MenuItem>
              {countries.map((country) => <MenuItem value={country.name}>{country.name}</MenuItem>)}
            </Select>
          </FormControl>
        </div>
        <div className="app_stats">
-         <Infobox nme="Coronavirus Cases" cases={countryInfo.todayCases} total={countryInfo.cases}></Infobox>
-         <Infobox nme="Coronavirus Recoveries" cases={countryInfo.todayRecovered} total={countryInfo.recovered}></Infobox>
-         <Infobox nme="Deaths" cases={countryInfo.todayDeaths} total={countryInfo.deaths}></Infobox>
-       </div>
-       <Map center={{ lat: 20.5937, lng: 78.9629 }} zoom={4}/>
+          <Infobox
+            onClick={(e) => setCasesType("cases")}
+            title="Coronavirus Cases"
+            isRed
+            active={casesType === "cases"}
+            cases={prettyPrintStat(countryInfo.todayCases)}
+            total={numeral(countryInfo.cases).format("0.0a")}
+          />
+          <Infobox
+            onClick={(e) => setCasesType("recovered")}
+            title="Recovered"
+            active={casesType === "recovered"}
+            cases={prettyPrintStat(countryInfo.todayRecovered)}
+            total={numeral(countryInfo.recovered).format("0.0a")}
+          />
+          <Infobox
+            onClick={(e) => setCasesType("deaths")}
+            title="Deaths"
+            isRed
+            active={casesType === "deaths"}
+            cases={prettyPrintStat(countryInfo.todayDeaths)}
+            total={numeral(countryInfo.deaths).format("0.0a")}
+          />
+        </div>
+       <Map
+          countries={mapCountries}
+          casesType={casesType}
+          center={mapCenter}
+          zoom={mapZoom}
+        />
+       <div className="app_charts">
+         <div className="app_chart_cases"><div className="app_chart_heading"><b>Worldwide New Cases</b></div><Covidchart casesType="cases"></Covidchart></div>
+         <div className="app_chart_recovered"><div className="app_chart_heading"><b>Worldwide Recoveries</b></div><Covidchart casesType="recovered"></Covidchart></div>
+         <div className="app_chart_deaths"><div className="app_chart_heading"><b>Worldwide New Deaths</b></div><Covidchart casesType="deaths"></Covidchart></div>
+       </div> 
     </div>
-    <Card className="app_right">
+    <Card>
+      <div className="app_right">
       <CardContent>
         <div className="app_information">
         <h3>Live cases by country</h3>
         <Table countries={tabledata}></Table>
-        <h3>Worldwide New cases</h3>
-        <Covidchart/>
         </div>
       </CardContent>
+      </div>
     </Card>
      </div>
+     </>
    )
 }
 

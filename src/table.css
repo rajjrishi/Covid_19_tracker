@@ -1,8 +1,24 @@
 .table{
     margin-top: 20px;
-    overflow: scroll;
-    height: 400px;
     color: #6a5d5d;
+    height: 1200px;
+    overflow: scroll;
+}
+.table::-webkit-scrollbar{
+    width: 7px;
+}
+.table::-webkit-scrollbar-track{
+    background: rgba(22, 22, 37, 0.1);
+}
+.table::-webkit-scrollbar-track:hover{
+    background: rgba(255, 255, 255,0.5);
+}
+.table::-webkit-scrollbar-thumb{
+    background: rgba(22, 22, 37, 0.1);
+    border-radius: 15px;
+}
+.table::-webkit-scrollbar-thumb:hover{
+    background: rgb(22, 22, 37);
 }
 .table tr{
     display: flex;
@@ -12,5 +28,5 @@
     padding: 0.5rem;
 }
 .table tr:nth-of-type(odd){
-    background-color: #f3f2f8;
+    background-color: #f5f6fa;
 }
